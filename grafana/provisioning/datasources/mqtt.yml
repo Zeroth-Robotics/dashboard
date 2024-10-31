@@ -1,0 +1,10 @@
+apiVersion: 1
+
+datasources:
+  - name: grafana-mqtt-datasource
+    type: grafana-mqtt-datasource
+    uid: ce2kkgnkuk45ce
+    access: proxy
+    isDefault: false
+    jsonData:
+      uri: "tcp://mqtt:1883"

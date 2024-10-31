@@ -1,0 +1,84 @@
+services:
+  mqtt:
+    image: eclipse-mosquitto:latest
+    container_name: mqtt-broker
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto_config:/mosquitto/config
+    networks:
+      - monitoring_net
+
+  influxdb:
+    image: influxdb:2
+    container_name: influxdb
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME_FILE: /run/secrets/influxdb2-admin-username
+      DOCKER_INFLUXDB_INIT_PASSWORD_FILE: /run/secrets/influxdb2-admin-password 
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN_FILE: /run/secrets/influxdb2-admin-token
+      DOCKER_INFLUXDB_INIT_ORG: zeroth-robotics 
+      DOCKER_INFLUXDB_INIT_BUCKET: robot
+    secrets:
+      - influxdb2-admin-username
+      - influxdb2-admin-password
+      - influxdb2-admin-token
+    ports:
+      - "8086:8086"
+    volumes:
+      - ./influxdb/data:/var/lib/influxdb2
+      - ./influxdb/config:/etc/influxdb2
+    networks:
+      - monitoring_net
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=grafana-mqtt-datasource
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    ports:
+      - "3000:3000"
+    networks:
+      - monitoring_net
+    depends_on:
+      - influxdb
+
+  telegraf:
+    image: telegraf:latest
+    container_name: telegraf
+    environment:
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
+    volumes:
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    secrets:
+      - influxdb2-admin-token
+    networks:
+      - monitoring_net
+    depends_on:
+      mqtt:
+        condition: service_started
+      influxdb:
+        condition: service_healthy
+
+networks:
+  monitoring_net:
+    driver: bridge
+
+secrets:
+  influxdb2-admin-username:
+    file: .env.influxdb2-admin-username
+  influxdb2-admin-password:
+    file: .env.influxdb2-admin-password
+  influxdb2-admin-token:
+    file: .env.influxdb2-admin-token
