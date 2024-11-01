@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 1,
+  "id": 2,
   "links": [],
   "panels": [
     {
@@ -79,7 +79,26 @@
             ]
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/.*_desired/"
+            },
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    0,
+                    10
+                  ],
+                  "fill": "dot"
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 9,
@@ -127,11 +146,18 @@
           }
         },
         {
+          "id": "extractFields",
+          "options": {
+            "format": "json",
+            "source": "servo_positions_desired"
+          }
+        },
+        {
           "id": "filterFieldsByName",
           "options": {
             "byVariable": false,
             "include": {
-              "pattern": "^(Time|${Servos:pipe})$"
+              "pattern": "^(Time|${Servos:pipe})$|^(Time|${Servos:pipe})_desired$"
             }
           }
         }
@@ -237,12 +263,15 @@
             "format": "json",
             "jsonPaths": [
               {
+                "alias": "x",
                 "path": "euler.x"
               },
               {
+                "alias": "y",
                 "path": "euler.y"
               },
               {
+                "alias": "z",
                 "path": "euler.z"
               }
             ],
@@ -253,7 +282,12 @@
         },
         {
           "id": "filterFieldsByName",
-          "options": {}
+          "options": {
+            "byVariable": false,
+            "include": {
+              "pattern": "^(Time|${IMU:pipe})$"
+            }
+          }
         }
       ],
       "type": "timeseries"
@@ -316,7 +350,26 @@
             ]
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/.*_desired/"
+            },
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    0,
+                    10
+                  ],
+                  "fill": "dot"
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 9,
@@ -324,7 +377,7 @@
         "x": 0,
         "y": 9
       },
-      "id": 2,
+      "id": 4,
       "maxDataPoints": 3000,
       "options": {
         "legend": {
@@ -354,9 +407,20 @@
         {
           "id": "extractFields",
           "options": {
-            "keepTime": false,
-            "replace": false,
+            "format": "json",
+            "jsonPaths": [
+              {
+                "path": ""
+              }
+            ],
             "source": "servo_velocities"
+          }
+        },
+        {
+          "id": "extractFields",
+          "options": {
+            "format": "json",
+            "source": "servo_velocities_desired"
           }
         },
         {
@@ -364,7 +428,7 @@
           "options": {
             "byVariable": false,
             "include": {
-              "pattern": "^(Time|${Servos:pipe})$"
+              "pattern": "^(Time|${Servos:pipe})$|^(Time|${Servos:pipe})_desired$"
             }
           }
         }
@@ -380,10 +444,12 @@
       {
         "current": {
           "text": [
-            "$__all"
+            "4",
+            "3"
           ],
           "value": [
-            "$__all"
+            "4",
+            "3"
           ]
         },
         "includeAll": true,
@@ -401,12 +467,12 @@
             "value": "2"
           },
           {
-            "selected": false,
+            "selected": true,
             "text": "3",
             "value": "3"
           },
           {
-            "selected": false,
+            "selected": true,
             "text": "4",
             "value": "4"
           },
@@ -473,6 +539,38 @@
         ],
         "query": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16",
         "type": "custom"
+      },
+      {
+        "current": {
+          "text": [
+            "$__all"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "includeAll": true,
+        "multi": true,
+        "name": "IMU",
+        "options": [
+          {
+            "selected": false,
+            "text": "x",
+            "value": "x"
+          },
+          {
+            "selected": false,
+            "text": "y",
+            "value": "y"
+          },
+          {
+            "selected": false,
+            "text": "z",
+            "value": "z"
+          }
+        ],
+        "query": "x,y,z",
+        "type": "custom"
       }
     ]
   },
@@ -482,8 +580,8 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "stompy micro data",
+  "title": "Live data",
   "uid": "ce2kkzac3hji8d",
-  "version": 11,
+  "version": 8,
   "weekStart": ""
 }

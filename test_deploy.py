@@ -10,6 +10,7 @@ client.connect("localhost", 1883, 60)
 
 # Add these constants at the start of the script
 BASE_FREQ = 0.5  # Base frequency in Hz
+TIME_OFFSET = 0.04  # 2 iterations (at 50Hz) worth of lag
 # Random phase offsets for each servo (generated once)
 position_offsets = np.random.uniform(0, 2*np.pi, 16)
 velocity_offsets = np.random.uniform(0, 2*np.pi, 16)
@@ -24,16 +25,29 @@ try:
         
         # Current time for sine wave calculation
         t = time.time()
+        t_desired = t + TIME_OFFSET  # Desired values lead actual values
         
-        # Generate sine waves for positions (-180 to +180 degrees)
+        # Generate sine waves for actual positions
         positions = {
             str(i+1): amp * np.sin(2*np.pi*BASE_FREQ*t + offset)
             for i, (amp, offset) in enumerate(zip(position_amplitudes, position_offsets))
         }
         
-        # Generate sine waves for velocities (-50 to +50 deg/s)
+        # Generate sine waves for desired positions (offset in time)
+        positions_desired = {
+            str(i+1)+"_desired": amp * np.sin(2*np.pi*BASE_FREQ*t_desired + offset)
+            for i, (amp, offset) in enumerate(zip(position_amplitudes, position_offsets))
+        }
+        
+        # Generate sine waves for actual velocities
         velocities = {
             str(i+1): amp * np.sin(2*np.pi*BASE_FREQ*t + offset)
+            for i, (amp, offset) in enumerate(zip(velocity_amplitudes, velocity_offsets))
+        }
+        
+        # Generate sine waves for desired velocities (offset in time)
+        velocities_desired = {
+            str(i+1)+"_desired": amp * np.sin(2*np.pi*BASE_FREQ*t_desired + offset)
             for i, (amp, offset) in enumerate(zip(velocity_amplitudes, velocity_offsets))
         }
         
@@ -60,7 +74,9 @@ try:
         data = {
             "time": timestamp,
             "servo_positions": positions,
+            "servo_positions_desired": positions_desired,
             "servo_velocities": velocities,
+            "servo_velocities_desired": velocities_desired,
             "imu": imu_data
         }
         
