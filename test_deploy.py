@@ -8,32 +8,51 @@ from datetime import datetime
 client = mqtt.Client()
 client.connect("localhost", 1883, 60)
 
+# Add these constants at the start of the script
+BASE_FREQ = 0.5  # Base frequency in Hz
+# Random phase offsets for each servo (generated once)
+position_offsets = np.random.uniform(0, 2*np.pi, 16)
+velocity_offsets = np.random.uniform(0, 2*np.pi, 16)
+# Random amplitude modifiers for each servo
+position_amplitudes = np.random.uniform(120, 180, 16)  # Different amplitude for each servo
+velocity_amplitudes = np.random.uniform(30, 50, 16)
+
 try:
     while True:
         # Current timestamp
         timestamp = datetime.utcnow().isoformat() + "Z"
         
-        # Simulate 16 servo positions (roughly -180 to +180 degrees)
-        positions = {str(i+1): pos for i, pos in enumerate(np.random.uniform(-180, 180, 16).tolist())}
+        # Current time for sine wave calculation
+        t = time.time()
         
-        # Simulate 16 servo velocities (-50 to +50 deg/s)
-        velocities = {str(i+1): vel for i, vel in enumerate(np.random.uniform(-50, 50, 16).tolist())}
-        # Simulate IMU data
+        # Generate sine waves for positions (-180 to +180 degrees)
+        positions = {
+            str(i+1): amp * np.sin(2*np.pi*BASE_FREQ*t + offset)
+            for i, (amp, offset) in enumerate(zip(position_amplitudes, position_offsets))
+        }
+        
+        # Generate sine waves for velocities (-50 to +50 deg/s)
+        velocities = {
+            str(i+1): amp * np.sin(2*np.pi*BASE_FREQ*t + offset)
+            for i, (amp, offset) in enumerate(zip(velocity_amplitudes, velocity_offsets))
+        }
+        
+        # Generate sinusoidal IMU data
         imu_data = {
             "accel": {
-                "x": np.random.uniform(-2, 2),
-                "y": np.random.uniform(-2, 2),
-                "z": np.random.uniform(9.5, 10.5)  # Roughly 1G + noise
+                "x": np.sin(2*np.pi*0.3*t),
+                "y": np.sin(2*np.pi*0.3*t + np.pi/3),
+                "z": 10 + 0.5*np.sin(2*np.pi*0.3*t + np.pi/2)  # Oscillate around 10
             },
             "gyro": {
-                "x": np.random.uniform(-10, 10),
-                "y": np.random.uniform(-10, 10),
-                "z": np.random.uniform(-10, 10)
-            }, 
+                "x": 5*np.sin(2*np.pi*0.4*t),
+                "y": 5*np.sin(2*np.pi*0.4*t + np.pi/3),
+                "z": 5*np.sin(2*np.pi*0.4*t + 2*np.pi/3)
+            },
             "euler": {
-                "x": np.random.uniform(-180, 180),
-                "y": np.random.uniform(-180, 180),
-                "z": np.random.uniform(-180, 180)
+                "x": 90*np.sin(2*np.pi*0.2*t),
+                "y": 90*np.sin(2*np.pi*0.2*t + np.pi/3),
+                "z": 90*np.sin(2*np.pi*0.2*t + 2*np.pi/3)
             }
         }
         
